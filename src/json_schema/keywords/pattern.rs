@@ -12,7 +12,8 @@ impl super::Keyword for Pattern {
 
         if pattern.is_string() {
             let pattern_val = pattern.as_str().unwrap();
-            match regex::Regex::new(pattern_val) {
+            let pattern_val_fixed = str::replace(pattern_val, r"\/", "/");
+            match regex::Regex::new(pattern_val_fixed.as_str()) {
                 Ok(re) => Ok(Some(Box::new(validators::Pattern { regex: re }))),
                 Err(err) => Err(schema::SchemaError::Malformed {
                     path: ctx.fragment.join("/"),
@@ -54,6 +55,29 @@ fn validate() {
     assert_eq!(schema.validate(&to_value("abb").unwrap()).is_valid(), true);
     assert_eq!(schema.validate(&to_value("abbd").unwrap()).is_valid(), true);
     assert_eq!(schema.validate(&to_value("abd").unwrap()).is_valid(), false);
+}
+
+#[test]
+fn compile_escaped() {
+    let mut scope = scope::Scope::new();
+
+    let schema = scope.compile_and_return(
+        builder::schema(|s| {
+            s.pattern(r"a\.b.*");
+        })
+        .into_json(),
+        true,
+    );
+    assert!(schema.is_ok(), format!("got Error: {:?}", schema.err()));
+
+    let schema = scope.compile_and_return(
+        builder::schema(|s| {
+            s.pattern(r"a\/b.*");
+        })
+        .into_json(),
+        true,
+    );
+    assert!(schema.is_ok(), format!("got Error: {:?}", schema.err()));
 }
 
 #[test]
