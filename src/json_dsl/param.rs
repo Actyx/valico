@@ -1,4 +1,3 @@
-use regex;
 use serde::Serialize;
 use serde_json::{to_value, Value};
 use url;
@@ -112,7 +111,7 @@ impl Param {
         self.allow_null = true;
     }
 
-    pub fn regex(&mut self, regex: regex::Regex) {
+    pub fn regex(&mut self, regex: regress::Regex) {
         self.validators.push(Box::new(regex));
     }
 

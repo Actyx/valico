@@ -1,4 +1,3 @@
-use regex;
 use serde_json::Value;
 use valico::json_dsl;
 use valico::json_dsl::errors;
@@ -268,7 +267,7 @@ fn is_validates_with_regex() {
     let params = json_dsl::Builder::build(|params| {
         params.req("a", |a| {
             a.coerce(json_dsl::string());
-            a.regex(regex::Regex::new("^test$").unwrap());
+            a.regex(regress::Regex::new("^test$").unwrap());
         })
     });
 
@@ -282,7 +281,7 @@ fn is_validates_with_regex() {
         params.req("a", |a| {
             // regex can't be applied to list, so it will never be valid
             a.coerce(json_dsl::array());
-            a.regex(regex::Regex::new("^test$").unwrap());
+            a.regex(regress::Regex::new("^test$").unwrap());
         })
     });
 

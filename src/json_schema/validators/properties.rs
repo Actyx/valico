@@ -1,4 +1,3 @@
-use regex;
 use serde_json::Value;
 use std::collections;
 use url;
@@ -16,7 +15,7 @@ pub enum AdditionalKind {
 pub struct Properties {
     pub properties: collections::HashMap<String, url::Url>,
     pub additional: AdditionalKind,
-    pub patterns: Vec<(regex::Regex, url::Url)>,
+    pub patterns: Vec<(regress::Regex, url::Url)>,
 }
 
 impl super::Validator for Properties {
@@ -42,7 +41,7 @@ impl super::Validator for Properties {
 
             let mut is_pattern_passed = false;
             for &(ref regex, ref url) in self.patterns.iter() {
-                if regex.is_match(key.as_ref()) {
+                if regex.find(key.as_ref()).is_some() {
                     let schema = scope.resolve(url);
                     if schema.is_some() {
                         let value_path = [path, key.as_ref()].join("/");
