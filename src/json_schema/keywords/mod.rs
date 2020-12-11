@@ -1,8 +1,8 @@
 use serde_json::Value;
+use std::any;
+use std::collections;
 use std::fmt;
 use std::sync::Arc;
-use std::collections;
-use std::any;
 
 use super::schema;
 use super::validators;
@@ -15,6 +15,9 @@ pub type KeywordMap = collections::HashMap<&'static str, Arc<KeywordConsumer>>;
 pub trait Keyword: Send + Sync + any::Any {
     fn compile(&self, def: &Value, ctx: &schema::WalkContext) -> KeywordResult;
     fn is_exclusive(&self) -> bool {
+        false
+    }
+    fn place_first(&self) -> bool {
         false
     }
 }
@@ -37,10 +40,10 @@ impl fmt::Debug for dyn Keyword + 'static {
 macro_rules! keyword_key_exists {
     ($val:expr, $key:expr) => {{
         let maybe_val = $val.get($key);
-        if maybe_val.is_none() {
-            return Ok(None);
+        if let Some(maybe_val) = maybe_val {
+            maybe_val
         } else {
-            maybe_val.unwrap()
+            return Ok(None);
         }
     }};
 }
@@ -48,8 +51,10 @@ macro_rules! keyword_key_exists {
 #[macro_use]
 pub mod maxmin_length;
 
+pub mod conditional;
 pub mod const_;
 pub mod contains;
+pub mod content_media;
 pub mod dependencies;
 pub mod enum_;
 pub mod format;
@@ -81,16 +86,49 @@ pub fn default() -> KeywordMap {
         &mut map,
     );
     decouple_keyword((vec!["enum"], Box::new(enum_::Enum)), &mut map);
-    decouple_keyword((vec!["exclusiveMaximum"], Box::new(maxmin::ExclusiveMaximum)), &mut map);
-    decouple_keyword((vec!["exclusiveMinimum"], Box::new(maxmin::ExclusiveMinimum)), &mut map);
-    decouple_keyword((vec!["items", "additionalItems"], Box::new(items::Items)), &mut map);
-    decouple_keyword((vec!["maxItems"], Box::new(maxmin_items::MaxItems)), &mut map);
-    decouple_keyword((vec!["maxLength"], Box::new(maxmin_length::MaxLength)), &mut map);
-    decouple_keyword((vec!["maxProperties"], Box::new(maxmin_properties::MaxProperties)), &mut map);
+    decouple_keyword(
+        (vec!["exclusiveMaximum"], Box::new(maxmin::ExclusiveMaximum)),
+        &mut map,
+    );
+    decouple_keyword(
+        (vec!["exclusiveMinimum"], Box::new(maxmin::ExclusiveMinimum)),
+        &mut map,
+    );
+    decouple_keyword(
+        (vec!["items", "additionalItems"], Box::new(items::Items)),
+        &mut map,
+    );
+    decouple_keyword(
+        (vec!["maxItems"], Box::new(maxmin_items::MaxItems)),
+        &mut map,
+    );
+    decouple_keyword(
+        (vec!["maxLength"], Box::new(maxmin_length::MaxLength)),
+        &mut map,
+    );
+    decouple_keyword(
+        (
+            vec!["maxProperties"],
+            Box::new(maxmin_properties::MaxProperties),
+        ),
+        &mut map,
+    );
     decouple_keyword((vec!["maximum"], Box::new(maxmin::Maximum)), &mut map);
-    decouple_keyword((vec!["minItems"], Box::new(maxmin_items::MinItems)), &mut map);
-    decouple_keyword((vec!["minLength"], Box::new(maxmin_length::MinLength)), &mut map);
-    decouple_keyword((vec!["minProperties"], Box::new(maxmin_properties::MinProperties)), &mut map);
+    decouple_keyword(
+        (vec!["minItems"], Box::new(maxmin_items::MinItems)),
+        &mut map,
+    );
+    decouple_keyword(
+        (vec!["minLength"], Box::new(maxmin_length::MinLength)),
+        &mut map,
+    );
+    decouple_keyword(
+        (
+            vec!["minProperties"],
+            Box::new(maxmin_properties::MinProperties),
+        ),
+        &mut map,
+    );
     decouple_keyword((vec!["minimum"], Box::new(maxmin::Minimum)), &mut map);
     decouple_keyword(
         (vec!["multipleOf"], Box::new(multiple_of::MultipleOf)),
@@ -117,6 +155,22 @@ pub fn default() -> KeywordMap {
     decouple_keyword((vec!["type"], Box::new(type_::Type)), &mut map);
     decouple_keyword(
         (vec!["uniqueItems"], Box::new(unique_items::UniqueItems)),
+        &mut map,
+    );
+
+    decouple_keyword(
+        (
+            vec!["contentMediaType", "contentEncoding"],
+            Box::new(content_media::ContentMedia),
+        ),
+        &mut map,
+    );
+
+    decouple_keyword(
+        (
+            vec!["if", "then", "else"],
+            Box::new(conditional::Conditional),
+        ),
         &mut map,
     );
 

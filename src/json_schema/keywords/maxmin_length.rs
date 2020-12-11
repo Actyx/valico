@@ -42,8 +42,6 @@ use super::super::builder;
 #[cfg(test)]
 use super::super::scope;
 #[cfg(test)]
-use jsonway;
-#[cfg(test)]
 use serde_json::to_value;
 
 #[test]
@@ -58,7 +56,7 @@ fn validate_max_length() {
             true,
         )
         .ok()
-        .unwrap();;
+        .unwrap();
 
     assert_eq!(
         schema.validate(&to_value(&"1234").unwrap()).is_valid(),
@@ -121,7 +119,7 @@ fn validate_min_length() {
             true,
         )
         .ok()
-        .unwrap();;
+        .unwrap();
 
     assert_eq!(
         schema.validate(&to_value(&"1234").unwrap()).is_valid(),
